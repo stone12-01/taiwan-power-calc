@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 台灣電費專業試算工具</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+        body { font-family: 'Inter', "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 450px; transition: transform 0.3s ease; }
+        h2 { margin-top: 0; font-size: 1.5rem; text-align: center; color: var(--primary); }
+        .tab-group { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 1.5rem; }
+        .tab { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+        .tab.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: var(--primary); font-weight: bold; }
+        .input-box { margin-bottom: 1.2rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #64748b; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        #result-area { margin-top: 1.5rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; display: none; }
+        .price-display { text-align: center; font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .price-unit { font-size: 1rem; margin-left: 4px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); margin-bottom: 8px; }
+    </style>
+</head>
+<meta name="google-site-verification" content="WzunQYI3b34wdrIfArsegEhZu3gQipDERVT-0ExiImc" />
+<body>
+
+    <div class="ad-container" style="margin-top: 20px; border: 1px dashed #ccc; padding: 10px; text-align: center; color: #999;">
+    <p style="font-size: 12px;">贊助商廣告</p>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+         data-ad-slot="xxxxxxxxxx"
+         data-ad-format="auto"></ins>
+    </div>
+
+<div class="card">
+    <div class="badge">2026 最新費率試算</div>
+    <h2>⚡ 電費計算機</h2>
+
+    <div class="tab-group">
+        <div class="tab active" onclick="setPeriod(1, this)">單月計算</div>
+        <div class="tab" onclick="setPeriod(2, this)">隔月一期 (2個月)</div>
+    </div>
+    
+    <div class="input-box">
+        <label>用電季節</label>
+        <select id="season">
+            <option value="summer">夏月 (6月 - 9月)</option>
+            <option value="non-summer">非夏月 (其他月份)</option>
+        </select>
+    </div>
+
+    <div class="input-box">
+        <label id="kwh-label">單月用電度數 (kWh)</label>
+        <input type="number" id="kwh" placeholder="例如：350">
+    </div>
+
+    <button onclick="calculate()">立即計算預估金額</button>
+
+    <div id="result-area">
+        <div style="text-align:center; color:#64748b; font-size: 0.875rem;">預估帳單總額</div>
+        <div class="price-display">NT$ <span id="totalPrice">0</span><span class="price-unit">元</span></div>
+        <div id="breakdown" style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 8px;"></div>
+    </div>
+</div>
+
+<script>
+    let currentPeriod = 1; // 1: 單月, 2: 雙月
+
+    function setPeriod(p, el) {
+        currentPeriod = p;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('kwh-label').innerText = p === 1 ? "單月用電度數 (kWh)" : "兩個月總用電度數 (kWh)";
+    }
+
+    function calculate() {
+        const kwh = parseFloat(document.getElementById('kwh').value);
+        const season = document.getElementById('season').value;
+        
+        if (!kwh || kwh <= 0) return alert("請輸入有效的電量度數");
+
+        // 2026 累進費率表 (假設調整後)
+        const rates = {
+            'summer': [
+                { limit: 120, price: 1.63 }, { limit: 330, price: 2.38 }, { limit: 500, price: 3.52 },
+                { limit: 700, price: 4.80 }, { limit: 1000, price: 5.83 }, { limit: Infinity, price: 6.98 }
+            ],
+            'non-summer': [
+                { limit: 120, price: 1.63 }, { limit: 330, price: 2.10 }, { limit: 500, price: 2.89 },
+                { limit: 700, price: 3.94 }, { limit: 1000, price: 4.60 }, { limit: Infinity, price: 5.03 }
+            ]
+        };
+
+        // 如果是雙月，台電會將度數除以 2 來套用級距，最後再乘以 2
+        let calcKwh = currentPeriod === 2 ? kwh / 2 : kwh;
+        let total = 0;
+        let remaining = calcKwh;
+        let prevLimit = 0;
+        const currentRates = rates[season];
+
+        for (let r of currentRates) {
+            let range = r.limit - prevLimit;
+            if (remaining > range) {
+                total += range * r.price;
+                remaining -= range;
+                prevLimit = r.limit;
+            } else {
+                total += remaining * r.price;
+                remaining = 0;
+                break;
+            }
+        }
+
+        let finalPrice = currentPeriod === 2 ? total * 2 : total;
+        
+        document.getElementById('totalPrice').innerText = Math.round(finalPrice).toLocaleString();
+        document.getElementById('breakdown').innerText = currentPeriod === 2 ? "已按雙月分段計費計算" : "按單月累進級距計算";
+        document.getElementById('result-area').style.display = 'block';
+    }
+</script>
+</body>
+</html>
